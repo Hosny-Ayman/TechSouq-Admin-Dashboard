@@ -1,0 +1,215 @@
+<div class="flex items-center justify-center pb-5">
+    <div class="relative w-1/2 bg-gray-100 rounded-2xl shadow-md p-1.5 transition-all duration-150 ease-in-out hover:scale-105 hover:shadow-lg">
+        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
+            </svg>
+        </div>
+        <input
+            type="search"
+            [(ngModel)]="searchTerm"
+            (keyup.enter)="onSearch()"
+            (input)="onSearchChange()"
+            (search)="onSearchChange()"
+            class="w-full pl-8 pr-24 py-3 text-xl text-gray-700 bg-transparent rounded-lg focus:outline-none"
+            placeholder="Search for Product"
+        />
+        <button (click)="onSearch()" class="absolute right-1 top-1 bottom-1 px-6 bg-[#5044e4] text-white font-medium rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5044e4]">Search</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="flex justify-between align-items-center mb-4">
+        <h5 class="text-xl font-bold m-0">Manage Products</h5>
+        <button pButton label="Add New Product" icon="pi pi-plus" class="p-button-success" (click)="openNew()"></button>
+    </div>
+
+    <p-table [value]="products" [lazy]="true" (onLazyLoad)="loadProducts($event)" [paginator]="true" [rows]="pageSize" [totalRecords]="totalRecords" [loading]="loading" [rowsPerPageOptions]="[5, 10, 20, 50]" class="p-datatable-striped">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Brand</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Actions</th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-product>
+            <tr>
+                <td>
+                    <img [src]="getImageUrl('ProductImages',product.firstImage)" [alt]="product.name" class="w-16 h-16 object-contain rounded shadow" />
+                </td>
+                <td class="font-bold">{{ product.name }}</td>
+                <td>{{ product.categoryName }}</td>
+                <td>{{ product.brandName }}</td>
+                <td>
+                    <span [class.line-through]="product.priceAfterDiscount" [class.text-gray-400]="product.priceAfterDiscount"> {{ product.price | currency }} </span>
+                    @if (product.priceAfterDiscount) { <span class="text-green-600 font-bold ml-2"> {{ product.priceAfterDiscount | currency }} </span>}
+                </td>
+                <td>
+                    <span
+                        class="p-badge"
+                        [ngClass]="{
+                        'p-badge-success': product.stock > 10,
+                        'p-badge-warning': product.stock <= 10 && product.stock > 0,
+                        'p-badge-danger': product.stock === 0
+                    }"
+                    >
+                        {{ product.stock }}
+                    </span>
+                </td>
+                <td>
+                    <div class="flex gap-2">
+                        <button pButton icon="pi pi-pencil" (click)="EditProduct(product)" class="p-button-rounded p-button-success p-button-sm"></button>
+                        <button pButton icon="pi pi-trash" (click)="deleteProduct(product)" class="p-button-rounded p-button-danger p-button-sm"></button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="7" class="text-center p-4">No products found.</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<p-dialog [(visible)]="productDialog" [style]="{width: '800px'}" header="Create New Product" [modal]="true" class="p-fluid">
+    <ng-template pTemplate="content">
+        <form [formGroup]="productForm" class="mt-3">
+            <div class="field mb-4">
+                <label class="font-bold block mb-2">Product Name</label>
+                <input type="text" pInputText formControlName="name" placeholder="Enter product name" autofocus />
+            </div>
+
+            <div class="field mb-4">
+                <label class="font-bold block mb-2">Description</label>
+                <textarea p-textarea formControlName="description" rows="3" class="w-full"></textarea>
+            </div>
+
+            <div class="formgrid grid mb-4">
+                <div class="field col">
+                    <label class="font-bold block mb-2">Original Price</label>
+                    <p-inputnumber formControlName="price" mode="decimal" suffix=" EGP" [minFractionDigits]="0" [maxFractionDigits]="2" class="w-full"></p-inputnumber>
+                </div>
+                <div class="field col">
+                    <label class="font-bold block mb-2">Stock quantity</label>
+                    <p-inputnumber formControlName="stock" class="w-full"></p-inputnumber>
+                </div>
+            </div>
+
+            <div class="formgrid grid mb-4">
+                <div class="field col">
+                    <label class="font-bold block mb-2">Category</label>
+                    <p-select [options]="categories" formControlName="categoryId" optionLabel="name" optionValue="id" placeholder="Select Category" [filter]="true" class="w-full" appendTo="body"></p-select>
+                </div>
+                <div class="field col">
+                    <label class="font-bold block mb-2">Brand</label>
+                    <p-select [options]="brands" formControlName="brandId" optionLabel="name" optionValue="id" placeholder="Select Brand" [filter]="true" class="w-full" appendTo="body"></p-select>
+                </div>
+            </div>
+
+            <div class="surface-ground p-3 border-round border surface-border mb-4">
+                <h6 class="text-primary font-bold mb-3"><i class="pi pi-tag mr-2"></i>Discount & Promotion</h6>
+
+                <div class="formgrid grid mb-3 align-items-center">
+                    <div class="field col-12 md:col-4">
+                        <label class="font-bold block mb-2">Discount Value</label>
+
+                        <p-inputnumber formControlName="discountAmount" placeholder="Amount to subtract" class="w-full"></p-inputnumber>
+                    </div>
+                    <div class="field col-12 md:col-4">
+                        <label class="font-bold block mb-2 text-green-600">Price After Discount</label>
+                        <p-inputnumber formControlName="priceAfterDiscount" suffix=" EGP" [minFractionDigits]="0" [maxFractionDigits]="2" class="w-full"></p-inputnumber>
+                    </div>
+
+                    <div class="field col-12 md:col-4 mt-4 md:mt-0">
+                        <div class="flex align-items-center gap-2 p-2 border-round surface-0 border surface-border w-full transition-colors cursor-pointer" [ngClass]="{'border-green-500 surface-green-50': productForm.get('isFreeShipping')?.value}">
+                            <p-checkbox formControlName="isFreeShipping" [binary]="true" inputId="freeShip"></p-checkbox>
+                            <label for="freeShip" class="font-bold text-700 m-0 cursor-pointer" [ngClass]="{'text-green-700': productForm.get('isFreeShipping')?.value}">Is Free Shipping?</label>
+                            <i class="pi pi-truck ml-auto text-xl" [ngClass]="productForm.get('isFreeShipping')?.value ? 'text-green-500' : 'text-400'"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="formgrid grid">
+                    <div class="field col">
+                        <label class="font-bold block mb-2">Starts From</label>
+                        <p-datepicker formControlName="discountStartDate" [minDate]="minDate" [showIcon]="true" placeholder="Select start date" class="w-full" appendTo="body"></p-datepicker>
+                    </div>
+                    <div class="field col">
+                        <label class="font-bold block mb-2">Ends At</label>
+                        <p-datepicker formControlName="discountEndDate" [minDate]="minDate" [showIcon]="true" placeholder="Select end date" class="w-full" appendTo="body"></p-datepicker>
+                        @if (productForm.hasError('dateInvalid')) { <small class="text-red-500 font-bold block mt-1">End date must be after start date!</small>}
+                    </div>
+                </div>
+            </div>
+
+            <div class="formgrid grid">
+                <div class="field col-12 md:col-6 text-center">
+                    <label class="font-bold block mb-2 text-indigo-500"> Main Image (Required) </label>
+
+                    <div class="p-3 border border-dashed surface-border border-round bg-gray-50">
+                        <label for="mainImage" class="cursor-pointer block">
+                            <i class="pi pi-image text-3xl text-indigo-400 mb-2 block"></i>
+                            <span class="block text-sm font-bold text-gray-600"> Click to upload main image </span>
+                        </label>
+
+                        <input hidden type="file" id="mainImage" (change)="onImageSelect($event)" accept="image/*" />
+
+                        @if (MainimagePreviewUrl) {
+                        <div class="flex flex-col items-center mt-3">
+                            <button type="button" class="pi pi-times h-5 w-5 cursor-pointer text-red-500 mb-2 block" (click)="removeMainImage()"></button>
+
+                            <img [src]="MainimagePreviewUrl" alt="Product Image" class="h-24 w-24 object-contain border border-gray-200 rounded" />
+
+                            @if (mainImageFile) {
+                            <small class="text-green-600 font-bold mt-2"> Selected: {{ mainImageFile.name }} </small>
+                            } @else {
+                            <small class="text-blue-600 font-bold mt-2"> Current Image </small>
+                            }
+                        </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="field col-12 md:col-6 text-center">
+                    <label class="font-bold block mb-2 text-teal-500"> Gallery Images (Optional) </label>
+
+                    <div class="p-3 border border-dashed surface-border border-round bg-gray-50">
+                        <label for="additionalImages" class="cursor-pointer block">
+                            <i class="pi pi-images text-3xl text-teal-400 mb-2 block"></i>
+                            <span class="block text-sm font-bold text-gray-600"> Click to upload multiple images </span>
+                        </label>
+
+                        <input hidden type="file" id="additionalImages" multiple (change)="onAdditionalImagesSelect($event)" accept="image/*" />
+
+                        <!-- @if(additionalImageFiles.length > 0) {
+                        <small class="text-teal-600 font-bold block mt-2"> {{ additionalImageFiles.length }} images selected </small>
+                        } -->
+                        @if(imagesPreviewUrl.length>0) { @for (image of imagesPreviewUrl; track image) {
+                        <div class="flex flex-col items-center relative">
+                            <button type="button" class="pi pi-times absolute top-0 right-0 h-5 w-5 cursor-pointer text-red-500 mb-2" (click)=" removeSelectedImage(image.imagename)"></button>
+
+                            <img [src]="image.imagepath" alt="Product Image" class="h-24 w-24 object-contain border border-gray-200 rounded" />
+
+                            <small class="text-green-600 font-bold mt-2"> Selected: {{ image.imagename }} </small>
+                        </div>
+
+                        } }
+                    </div>
+                </div>
+            </div>
+        </form>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <button pButton pRipple label="Cancel" icon="pi pi-times" class="p-button-text p-button-danger" (click)="productDialog = false"></button>
+        <button pButton pRipple label="Save Product" icon="pi pi-check" class="p-button-success" (click)="saveProduct()" [disabled]="productForm.invalid"></button>
+    </ng-template>
+</p-dialog>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>

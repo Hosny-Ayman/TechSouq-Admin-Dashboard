@@ -1,0 +1,77 @@
+<div class="p-6 bg-gray-50 min-h-screen">
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Order Management</h1>
+
+        <div class="flex flex-wrap gap-4 items-center justify-between mb-6">
+            <div class="flex items-center w-2/3 justify-center pb-5">
+                <div class="relative w-1/2 bg-gray-100 rounded-2xl shadow-md p-1.5 transition-all duration-150 ease-in-out hover:scale-105 hover:shadow-lg">
+                    <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <input
+                        type="search"
+                        [(ngModel)]="searchTerm"
+                        (keyup.enter)="onSearchEnter()"
+                        (search)="onSearchEnter()"
+                        (input)="onSearchChange()"
+                        class="w-full pl-8 pr-24 py-3 text-xl text-gray-700 bg-transparent rounded-lg focus:outline-none"
+                        placeholder="Search for order"
+                    />
+                    <button (click)="onSearchEnter()" class="absolute right-1 top-1 bottom-1 px-6 bg-[#5044e4] text-white font-medium rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5044e4]">Search</button>
+                </div>
+            </div>
+
+            <div class="w-full md:w-56">
+                <p-select [(ngModel)]="selectedStatus" [options]="statuses" (onChange)="onStatusChange()" placeholder="Filter" Class="w-full p-dropdown-sm"> </p-select>
+            </div>
+        </div>
+
+        <p-table
+            [value]="orders"
+            [lazy]="true"
+            (onLazyLoad)="onLazyLoad($event)"
+            [paginator]="true"
+            [rows]="rows"
+            [(first)]="first"
+            [totalRecords]="totalRecords"
+            [loading]="loading"
+            [rowsPerPageOptions]="[5, 10, 20, 50]"
+            [rowHover]="true"
+            Class="p-datatable-gridlines"
+        >
+            <ng-template pTemplate="header">
+                <tr>
+                    <th style="width: 15%">Order Id</th>
+                    <th style="width: 30%">Client Full Name</th>
+                    <th style="width: 20%">Date</th>
+                    <th style="width: 15%">Status</th>
+                    <th style="width: 15%">Total</th>
+                    <th style="width: 5%; text-align: center">procedure</th>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-order>
+                <tr>
+                    <td class="font-semibold">#{{ order.id }}</td>
+                    <td>{{ order.customerName }}</td>
+                    <td>{{ order.date | date:'dd/MM/yyyy hh:mm a' }}</td>
+                    <td>
+                        <p-tag [value]="order.status" [severity]="getSeverity(order.status)"></p-tag>
+                    </td>
+                    <td class="font-bold text-green-600">{{ order.totalAmount | currency:'USD' }}</td>
+                    <td class="text-center">
+                        <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-info" [routerLink]="['/orderDetils', order.id]"></button>
+                    </td>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="6" class="text-center p-4 text-gray-500">لا توجد طلبات مطابقة للبحث الحالي.</td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+</div>

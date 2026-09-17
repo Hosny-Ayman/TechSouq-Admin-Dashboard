@@ -1,0 +1,70 @@
+<div class="card p-4">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Manage Categories</h2>
+        <button pButton icon="pi pi-plus" label="Add New" class="p-button-success" (click)="openNew()"></button>
+    </div>
+
+    <p-table
+        [value]="categories"
+        [lazy]="true"
+        [first]="first"
+        (onLazyLoad)="loadCategories($event)"
+        [paginator]="true"
+        [rows]="pageSize"
+        [totalRecords]="totalRecords"
+        [loading]="loading"
+        [rowsPerPageOptions]="[5,10,20,30,40,50]"
+        [tableStyle]="{ 'min-width': '50rem' }"
+        class="p-datatable-gridlines"
+    >
+        <ng-template pTemplate="header">
+            <tr>
+                <th>ID</th>
+                <th>Icon</th>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-cat>
+            <tr>
+                <td>{{ cat.id }}</td>
+                <td><i [class]="'pi ' + cat.imageUrl + ' text-2xl text-[#ffa41c]'"></i></td>
+                <td>{{ cat.name }}</td>
+                <td>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-info mr-2" (click)="editCategory(cat)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-danger" (click)="deleteCategory(cat.id)"></button>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+
+    @if (categories.length ===0){
+    <div class="text-center p-4 text-gray-500 font-medium">No categories found.</div>
+    }
+</div>
+
+<p-dialog [(visible)]="displayDialog" [style]="{width: '450px'}" [header]="isEditMode ? 'Edit Category' : 'New Category'" [modal]="true">
+    <div class="flex flex-col gap-4 mt-4">
+        <div class="flex flex-col gap-2">
+            <label for="name" class="font-bold">Category Name</label>
+            <input pInputText id="name" [(ngModel)]="categoryForm.name" class="w-full" />
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label class="font-bold">Category Icon</label>
+            <p-select [options]="primeIcons" [(ngModel)]="categoryForm.imageUrl" optionLabel="label" optionValue="value" placeholder="Select an Icon" [filter]="true" filterBy="label" [style]="{'width':'100%'}" [appendTo]="'body'">
+                <ng-template let-icon pTemplate="item">
+                    <div class="flex items-center gap-3">
+                        <i [class]="'pi ' + icon.value + ' text-xl'"></i>
+                        <span>{{ icon.label }}</span>
+                    </div>
+                </ng-template>
+            </p-select>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <button pButton label="Cancel" icon="pi pi-times" class="p-button-text" (click)="displayDialog = false"></button>
+        <button pButton label="Save" icon="pi pi-check" class="p-button-primary" (click)="saveCategory()"></button>
+    </ng-template>
+</p-dialog>

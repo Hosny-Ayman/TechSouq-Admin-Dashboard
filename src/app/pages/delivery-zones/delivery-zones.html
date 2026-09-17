@@ -1,0 +1,71 @@
+<div class="flex flex-wrap gap-4 items-center justify-between mb-6">
+    <div class="flex items-center w-2/3 justify-center pb-5">
+        <div class="relative w-1/2 bg-gray-100 rounded-2xl shadow-md p-1.5 transition-all duration-150 ease-in-out hover:scale-105 hover:shadow-lg">
+            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+            <input
+                type="search"
+                [(ngModel)]="searchName"
+                (keyup.enter)="loadZones({ first: 0, rows: pageSize })"
+                (search)="loadZones({ first: 0, rows: pageSize })"
+                (input)="onSearchChange()"
+                class="w-full pl-8 pr-24 py-3 text-xl text-gray-700 bg-transparent rounded-lg focus:outline-none"
+                placeholder="Search by Zone Name"
+            />
+            <button (click)="loadZones({ first: 0, rows: pageSize })" class="absolute right-1 top-1 bottom-1 px-6 bg-[#5044e4] text-white font-medium rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5044e4]">Search</button>
+        </div>
+    </div>
+</div>
+
+<div class="card p-4">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Delivery Zones</h2>
+        <button pButton icon="pi pi-plus" label="Add Zone" class="p-button-success" (click)="openNew()"></button>
+    </div>
+
+    @if (zones.length > 0 || loading) {
+    <p-table [value]="zones" [lazy]="true" (onLazyLoad)="loadZones($event)" [paginator]="true" [rows]="pageSize" [totalRecords]="totalRecords" [loading]="loading" [first]="first" class="p-datatable-gridlines">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>ID</th>
+                <th>Zone Name</th>
+                <th>Shipping Cost</th>
+                <th>Actions</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-zone>
+            <tr>
+                <td>{{ zone.id }}</td>
+                <td class="font-bold">{{ zone.name }}</td>
+                <td class="text-green-600 font-bold">${{ zone.shippingCost }}</td>
+                <td>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-info mr-2" (click)="editZone(zone)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-danger" (click)="deleteZone(zone.id)"></button>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+    } @else {
+    <div class="text-center p-4 text-gray-500 font-medium">No delivery zones found.</div>
+    }
+</div>
+
+<p-dialog [(visible)]="displayDialog" [style]="{width: '400px'}" [header]="isEditMode ? 'Edit Zone' : 'New Zone'" [modal]="true">
+    <div class="flex flex-col gap-4 mt-4">
+        <div class="flex flex-col gap-2">
+            <label for="name" class="font-bold">Zone Name</label>
+            <input pInputText id="name" [(ngModel)]="zoneForm.name" class="w-full" placeholder="e.g. Cairo" />
+        </div>
+        <div class="flex flex-col gap-2">
+            <label for="cost" class="font-bold">Shipping Cost ($)</label>
+            <input pInputText id="cost" type="number" [(ngModel)]="zoneForm.shippingCost" class="w-full" />
+        </div>
+    </div>
+    <ng-template pTemplate="footer">
+        <button pButton label="Cancel" icon="pi pi-times" class="p-button-text" (click)="displayDialog = false"></button>
+        <button pButton label="Save" icon="pi pi-check" class="p-button-primary" (click)="saveZone()"></button>
+    </ng-template>
+</p-dialog>
