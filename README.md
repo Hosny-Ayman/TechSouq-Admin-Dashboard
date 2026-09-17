@@ -168,6 +168,7 @@ The dashboard supports both Dark and Light modes.
 
 The frontend communicates with the TechSouq ASP.NET backend API through dedicated Angular services.
 
+
 API configuration is separated into development and production environment files.
 
 ## Rich Text Editing
